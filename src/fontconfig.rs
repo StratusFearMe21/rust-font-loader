@@ -18,20 +18,26 @@
 
 /// Font loading utilities for installed system fonts
 pub mod system_fonts {
-    use servo_fontconfig::fontconfig::{FcConfig, FcInitLoadConfigAndFonts, FcNameParse};
-    use servo_fontconfig::fontconfig::{FcPattern, FcPatternCreate, FcPatternDestroy, FcFontMatch};
-    use servo_fontconfig::fontconfig::{FcFontList, FcObjectSetBuild, FcChar8, FcDefaultSubstitute};
-    use servo_fontconfig::fontconfig::{FcPatternGetString, FcPatternAddInteger, FcPatternGetInteger};
-    use servo_fontconfig::fontconfig::{FcResultMatch, FcMatchPattern, FcResultNoMatch, FcConfigSubstitute};
     use servo_fontconfig::fontconfig::FcPatternAddString;
+    use servo_fontconfig::fontconfig::{
+        FcChar8, FcDefaultSubstitute, FcFontList, FcObjectSetBuild,
+    };
+    use servo_fontconfig::fontconfig::{FcConfig, FcInitLoadConfigAndFonts, FcNameParse};
+    use servo_fontconfig::fontconfig::{
+        FcConfigSubstitute, FcMatchPattern, FcResultMatch, FcResultNoMatch,
+    };
+    use servo_fontconfig::fontconfig::{FcFontMatch, FcPattern, FcPatternCreate, FcPatternDestroy};
+    use servo_fontconfig::fontconfig::{
+        FcPatternAddInteger, FcPatternGetInteger, FcPatternGetString,
+    };
 
-    use libc::{c_int, c_char};
+    use libc::{c_char, c_int};
 
+    use std::ffi::{CStr, CString};
+    use std::fs::File;
+    use std::io::prelude::*;
     use std::ptr;
     use std::slice;
-    use std::ffi::{CStr, CString};
-    use std::io::prelude::*;
-    use std::fs::File;
 
     use std::sync::{Once, ONCE_INIT};
 
@@ -48,18 +54,18 @@ pub mod system_fonts {
     // 	static FC_LANG: &'static [u8] = b"lang\0";
     // 	static FC_STYLELANG: &'static [u8] = b"stylelang\0";
 
-    // 	static FC_WEIGHT_THIN: c_int 		= 0;
-    // 	static FC_WEIGHT_EXTRALIGHT: c_int 	= 40;
-    // 	static FC_WEIGHT_LIGHT: c_int 		= 50;
-    // 	static FC_WEIGHT_DEMILIGHT: c_int 	= 55;
-    // 	static FC_WEIGHT_BOOK: c_int 		= 75;
+    static FC_WEIGHT_THIN: c_int = 0;
+    static FC_WEIGHT_EXTRALIGHT: c_int = 40;
+    static FC_WEIGHT_LIGHT: c_int = 50;
+    static FC_WEIGHT_DEMILIGHT: c_int = 55;
+    static FC_WEIGHT_BOOK: c_int = 75;
     static FC_WEIGHT_REGULAR: c_int = 80;
-    // 	static FC_WEIGHT_MEDIUM: c_int 		= 100;
-    // 	static FC_WEIGHT_DEMIBOLD: c_int 	= 180;
+    static FC_WEIGHT_MEDIUM: c_int = 100;
+    static FC_WEIGHT_DEMIBOLD: c_int = 180;
     static FC_WEIGHT_BOLD: c_int = 200;
-    // 	static FC_WEIGHT_EXTRABOLD: c_int 	= 205;
-    // 	static FC_WEIGHT_BLACK: c_int 		= 210;
-    // 	static FC_WEIGHT_EXTRA_BLACK: c_int = 215;
+    static FC_WEIGHT_EXTRABOLD: c_int = 205;
+    static FC_WEIGHT_BLACK: c_int = 210;
+    static FC_WEIGHT_EXTRA_BLACK: c_int = 215;
 
     static FC_SLANT_ROMAN: c_int = 0;
     static FC_SLANT_ITALIC: c_int = 100;
@@ -118,6 +124,61 @@ pub mod system_fonts {
 
         pub fn bold(mut self) -> FontPropertyBuilder {
             self.property.weight = FC_WEIGHT_BOLD;
+            self
+        }
+
+        pub fn thin(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_THIN;
+            self
+        }
+
+        pub fn extralight(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_EXTRALIGHT;
+            self
+        }
+
+        pub fn light(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_LIGHT;
+            self
+        }
+
+        pub fn demilight(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_DEMILIGHT;
+            self
+        }
+
+        pub fn book(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_BOOK;
+            self
+        }
+
+        pub fn regular(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_REGULAR;
+            self
+        }
+
+        pub fn medium(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_MEDIUM;
+            self
+        }
+
+        pub fn demibold(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_DEMIBOLD;
+            self
+        }
+
+        pub fn extrabold(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_EXTRABOLD;
+            self
+        }
+
+        pub fn black(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_BLACK;
+            self
+        }
+
+        pub fn extra_black(mut self) -> FontPropertyBuilder {
+            self.property.weight = FC_WEIGHT_EXTRA_BLACK;
             self
         }
 
@@ -186,7 +247,9 @@ pub mod system_fonts {
             if !property.family.is_empty() {
                 add_string(pattern, FC_FAMILY, &property.family);
             }
-            property.spacing.map(|spacing| add_int(pattern, FC_SPACING, spacing));
+            property
+                .spacing
+                .map(|spacing| add_int(pattern, FC_SPACING, spacing));
             add_int(pattern, FC_WEIGHT, property.weight);
             add_int(pattern, FC_SLANT, property.slant);
 
